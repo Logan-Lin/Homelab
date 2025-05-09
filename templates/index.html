@@ -87,6 +87,9 @@
             --text-color: #212529;
             --card-hover-shadow: rgba(0,0,0,0.1);
             --icon-bg-color: #f8f9fa;
+            --status-up: #28a745;
+            --status-down: #dc3545;
+            --status-unknown: #6c757d;
         }
 
         [data-bs-theme="dark"] {
@@ -122,6 +125,7 @@
             height: 100%;
             background-color: var(--card-bg-color);
             color: var(--text-color);
+            position: relative;
         }
         .card:hover {
             transform: translateY(-5px);
@@ -144,6 +148,46 @@
 
         .card-text {
             font-family: 'Lato', sans-serif;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .status-up {
+            background-color: var(--status-up);
+        }
+        
+        .status-down {
+            background-color: var(--status-down);
+        }
+        
+        .status-unknown {
+            background-color: var(--status-unknown);
+        }
+        
+        .status-tooltip {
+            position: absolute;
+            top: 25px;
+            right: 10px;
+            background: var(--card-bg-color);
+            padding: 5px;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            font-size: 0.7rem;
+            display: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .status-indicator:hover + .status-tooltip {
+            display: block;
         }
     </style>
 </head>
@@ -169,7 +213,10 @@
 
     <footer>
         <div class="container">
-            <p class="text-center text-secondary" style="font-size: 0.8rem; font-family: 'Lato', sans-serif;">Copyright © 2025. Designed and implemented by Yan Lin.</p>
+            <p class="text-center text-secondary" style="font-size: 0.8rem; font-family: 'Lato', sans-serif;">
+                Copyright © 2025. Designed and implemented by Yan Lin.
+                <span id="last-check-time" class="ms-2"></span>
+            </p>
         </div>
     </footer>
 
@@ -177,83 +224,29 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script>
-        const services = [
-            {
-                "name": "Plex",
-                "description": "Media server for movies and shows",
-                "url": "https://plex.yanlincs.com",
-                "icon": "/assets/img/plex.webp"
-            },
-            {
-                "name": "Emby",
-                "description": "Media server for movies and shows",
-                "url": "https://emby.yanlincs.com",
-                "icon": "/assets/img/emby.webp"
-            },
-            {
-                "name": "Overseerr",
-                "description": "Request manager for media servers",
-                "url": "https://seerr.yanlincs.com",
-                "icon": "/assets/img/overseerr.webp"
-            },
-            {
-                "name": "Gitea",
-                "description": "Self-hosted Git server",
-                "url": "https://git.yanlincs.com",
-                "icon": "/assets/img/gitea.webp"
-            },
-            {
-                "name": "Nextcloud",
-                "description": "Self-hosted cloud storage",
-                "url": "https://cloud.yanlincs.com",
-                "icon": "/assets/img/nextcloud.webp"
-            },
-            {
-                "name": "immich",
-                "description": "Home photo and video server",
-                "url": "https://photo.yanlincs.com",
-                "icon": "/assets/img/immich.webp"
-            },
-            {
-                "name": "Docmost",
-                "description": "Collaborative wiki and note software",
-                "url": "https://note.yanlincs.com",
-                "icon": "/assets/img/docmost.webp"
-            },
-            {
-                "name": "Overleaf",
-                "description": "Collaborative LaTeX editor",
-                "url": "https://latex.yanlincs.com",
-                "icon": "/assets/img/overleaf.webp"
-            },
-            {
-                "name": "linkding",
-                "description": "Bookmark manager and archiver",
-                "url": "https://link.yanlincs.com",
-                "icon": "/assets/img/linkding.webp"
-            },
-            {
-                "name": "WebDAV",
-                "description": "A simple WebDAV server",
-                "url": "https://dav.yanlincs.com",
-                "icon": "/assets/img/webdav.webp"
-            },
-            {
-                "name": "Nginx Proxy Manager",
-                "description": "Proxy server connecting home and public internet",
-                "url": "https://proxy.yanlincs.com",
-                "icon": "/assets/img/nginx.webp"
-            }
-        ];
-
-        function createServiceCards() {
+        function createServiceCards(healthData) {
             const servicesContainer = $('#services-container');
+            servicesContainer.empty();
             
-            services.forEach(service => {
+            healthData.forEach(service => {
+                const statusClass = `status-${service.status}`;
+                const lastChecked = new Date(service.last_checked * 1000).toLocaleTimeString();
+                
+                // Create detailed status message
+                let statusDetails = `Status: ${service.status}`;
+                if (service.response_code) {
+                    statusDetails += ` (${service.response_code})`;
+                }
+                if (service.status === 'down' && service.error) {
+                    statusDetails += ` - ${service.error}`;
+                }
+                
                 const card = `
                     <div class="col-xxl-3 col-lg-4 col-sm-6">
                         <a href="${service.url}" class="text-decoration-none" target="_blank">
                             <div class="card">
+                                <div class="status-indicator ${statusClass}"></div>
+                                <div class="status-tooltip">${statusDetails}<br>Last checked: ${lastChecked}</div>
                                 <img src="${service.icon}" class="card-img-top" alt="${service.name} icon">
                                 <div class="card-body p-3 pb-0">
                                     <h5 class="card-title">${service.name}</h5>
@@ -267,6 +260,29 @@
             });
         }
 
+        function updateLastCheckTime(healthData) {
+            if (healthData && healthData.length > 0) {
+                const lastChecked = Math.max(...healthData.map(s => s.last_checked));
+                const timeString = new Date(lastChecked * 1000).toLocaleString();
+                $('#last-check-time').text(`Last health check: ${timeString}`);
+            }
+        }
+
+        function fetchHealthStatus() {
+            $.ajax({
+                url: '/api/health-status',
+                method: 'GET',
+                success: function(data) {
+                    createServiceCards(data);
+                    updateLastCheckTime(data);
+                },
+                error: function() {
+                    console.error('Failed to fetch health status');
+                    createServiceCards([]);
+                }
+            });
+        }
+
         function setThemePreference() {
             const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const theme = darkModeMediaQuery.matches ? 'dark' : 'light';
@@ -276,8 +292,13 @@
         $(document).ready(function() {
             setThemePreference();
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setThemePreference);
-            createServiceCards();
+            
+            // Initial fetch
+            fetchHealthStatus();
+            
+            // Refresh health status every 60 seconds
+            setInterval(fetchHealthStatus, 60000);
         });
     </script>
 </body>
-</html>
+</html> 

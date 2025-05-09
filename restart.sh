@@ -1,0 +1,1 @@
+docker compose down && docker rmi homelab-dashboard-app && docker compose up -d
