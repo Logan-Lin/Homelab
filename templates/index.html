@@ -356,11 +356,7 @@
         $(document).ready(function() {
             setThemePreference();
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setThemePreference);
-            
-            // Initial fetch
             fetchHealthStatus();
-            
-            // Refresh health status every 60 seconds
             setInterval(fetchHealthStatus, 60000);
         });
     </script>

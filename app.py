@@ -30,7 +30,7 @@ services = [
     {"export": True, "name": "PairDrop", "url": "https://drop.yanlincs.com", "description": "P2P file sharing service", "icon": "/assets/img/pairdrop.webp"},
     {"export": True, "name": "Gotify", "url": "https://notify.yanlincs.com", "description": "Message distribution server", "icon": "/assets/img/gotify.webp"},
     {"export": True, "name": "NPM", "url": "https://proxy.yanlincs.com", "description": "Ngnix proxy manager", "icon": "/assets/img/nginx.webp"},
-    # Inner services (not exposed to the public)
+    # Inner services
     {"export": False, "name": "Sonarr", "url": "http://so.home.lab:8989", "description": "TV series management", "icon": "/assets/img/sonarr.webp"},
     {"export": False, "name": "Radarr", "url": "http://ra.home.lab:7878", "description": "Movie management", "icon": "/assets/img/radarr.webp", "icon_dark": "/assets/img/radarr_dark.webp"},
     {"export": False, "name": "Lidarr", "url": "http://li.home.lab:8686", "description": "Music management", "icon": "/assets/img/lidarr.webp"},
@@ -52,7 +52,7 @@ for service in services:
     service["error"] = None
     service["response_time"] = None
 
-# Response time threshold for slow status (in seconds)
+# Response time threshold for slow status (in milliseconds)
 SLOW_THRESHOLD = float(os.getenv("SLOW_THRESHOLD"))
 
 @app.route('/')
@@ -122,19 +122,17 @@ def health_check_worker():
         for service in services:
             check_service_health(service)
             
-            # Check for state transitions - only consider actual down states, not slow
+            # Check for state transitions
             if service["status"] == "down" and service["previous_status"] != "down":
                 newly_down_services.append(service)
             elif service["status"] != "down" and service["previous_status"] == "down":
                 recovered_services.append(service)
 
-        # Notify about newly down services
         if newly_down_services:
             message = f"⚠️ Services down: {', '.join([s['name'] for s in newly_down_services])}"
             notify_resp = send_notification("Service Down Alert", message, priority=9)
             logger.info(f"Down notification sent: {notify_resp}")
         
-        # Notify about recovered services
         if recovered_services:
             message = f"✅ Services recovered: {', '.join([s['name'] for s in recovered_services])}"
             notify_resp = send_notification("Service Recovery", message, priority=2)
