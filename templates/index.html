@@ -90,6 +90,7 @@
             --status-up: #28a745;
             --status-down: #dc3545;
             --status-unknown: #6c757d;
+            --text-secondary: #6c757d;
         }
 
         [data-bs-theme="dark"] {
@@ -98,6 +99,7 @@
             --text-color: #f8f9fa;
             --card-hover-shadow: rgba(255,255,255,0.1);
             --icon-bg-color: #2b3035;
+            --text-secondary: #adb5bd;
         }
 
         body {
@@ -127,7 +129,7 @@
             color: var(--text-color);
             position: relative;
         }
-        .card:hover {
+        .card:not(.internal-card):hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px var(--card-hover-shadow);
         }
@@ -137,6 +139,11 @@
             padding: 25px;
             background-color: var(--icon-bg-color);
         }
+        .internal-card .card-img-top {
+            height: 90px;
+            padding: 20px;
+        }
+        
         .header {
             margin-bottom: 30px;
         }
@@ -189,6 +196,10 @@
         .status-indicator:hover + .status-tooltip {
             display: block;
         }
+
+        .link-secondary {
+            color: var(--text-secondary) !important;
+        }
     </style>
 </head>
 <body>
@@ -206,11 +217,19 @@
                 </div>
             </div>
             <p class="lead text-center mt-2" style="font-family: 'Georgia', sans-serif;">
-                Services running on my home server, publicly accessible through reverse proxy
+                Services self-hosted on my home server, publicly accessible through reverse proxy
             </p>
         </div>
         
-        <div id="services-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-3"></div>
+        <div id="public-services-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-3"></div>
+        
+        <div id="inner-services-section" class="mt-5" style="display: none;">
+            <hr class="my-4">
+            <p class="lead text-center mb-4" style="font-family: 'Lato', sans-serif;">
+                Internal services only accessible within my home network or VPN subnet
+            </p>
+            <div id="inner-services-container" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xxl-6 g-3"></div>
+        </div>
     </div>
 
     <footer>
@@ -227,16 +246,22 @@
     
     <script>
         function createServiceCards(healthData) {
-            const servicesContainer = $('#services-container');
-            servicesContainer.empty();
+            const publicServicesContainer = $('#public-services-container');
+            const innerServicesContainer = $('#inner-services-container');
+            const innerServicesSection = $('#inner-services-section');
+            
+            publicServicesContainer.empty();
+            innerServicesContainer.empty();
+            
             const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            
+            let hasInnerServices = false;
             
             healthData.forEach(service => {
                 const statusClass = `status-${service.status}`;
                 const lastChecked = new Date(service.last_checked * 1000).toLocaleTimeString();
                 const iconSrc = isDarkMode && service.icon_dark ? service.icon_dark : service.icon;
                 
-                // Create detailed status message
                 let statusDetails = `Status: ${service.status}`;
                 if (service.response_code) {
                     statusDetails += ` (${service.response_code})`;
@@ -245,23 +270,52 @@
                     statusDetails += ` - ${service.error}`;
                 }
                 
-                const card = `
-                    <div class="col">
-                        <a href="${service.url}" class="text-decoration-none" target="_blank">
-                            <div class="card">
+                const isInnerService = service.export === false;
+                if (isInnerService) {
+                    hasInnerServices = true;
+                }
+                
+                let cardContent;
+                if (isInnerService) {
+                    cardContent = `
+                        <div class="col">
+                            <div class="card internal-card">
                                 <div class="status-indicator ${statusClass}"></div>
                                 <div class="status-tooltip">${statusDetails}<br>Last checked: ${lastChecked}</div>
                                 <img src="${iconSrc}" class="card-img-top" alt="${service.name} icon">
                                 <div class="card-body p-3 pb-0">
-                                    <h5 class="card-title">${service.name}</h5>
+                                    <h5 class="card-title mb-0"><small>${service.name}</small></h5>
                                     <p class="card-text"><small>${service.description}</small></p>
                                 </div>
                             </div>
-                        </a>
-                    </div>
-                `;
-                servicesContainer.append(card);
+                        </div>
+                    `;
+                    innerServicesContainer.append(cardContent);
+                } else {
+                    cardContent = `
+                        <div class="col">
+                            <a href="${service.url}" class="text-decoration-none" target="_blank">
+                                <div class="card">
+                                    <div class="status-indicator ${statusClass}"></div>
+                                    <div class="status-tooltip">${statusDetails}<br>Last checked: ${lastChecked}</div>
+                                    <img src="${iconSrc}" class="card-img-top" alt="${service.name} icon">
+                                    <div class="card-body p-3 pb-0">
+                                        <h5 class="card-title">${service.name}</h5>
+                                        <p class="card-text"><small>${service.description}</small></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                    publicServicesContainer.append(cardContent);
+                }
             });
+            
+            if (hasInnerServices) {
+                innerServicesSection.show();
+            } else {
+                innerServicesSection.hide();
+            }
         }
 
         function updateLastCheckTime(healthData) {

@@ -16,20 +16,33 @@ load_dotenv()
 
 # Services to monitor
 services = [
-    {"name": "Plex", "url": "https://plex.yanlincs.com", "description": "Media streaming server", "icon": "/assets/img/plex.webp", "icon_dark": "/assets/img/plex_dark.webp"},
-    {"name": "Emby", "url": "https://emby.yanlincs.com", "description": "Media streaming server", "icon": "/assets/img/emby.webp", "icon_dark": "/assets/img/emby_dark.webp"},
-    {"name": "Overseerr", "url": "https://seerr.yanlincs.com", "description": "Media request manager", "icon": "/assets/img/overseerr.webp", "icon_dark": "/assets/img/overseerr_dark.webp"},
-    {"name": "Tautulli", "url": "https://tautu.yanlincs.com", "description": "Media server monitoring", "icon": "/assets/img/tautulli.webp", "icon_dark": "/assets/img/tautulli_dark.webp"},
-    {"name": "Gitea", "url": "https://git.yanlincs.com", "description": "Git and development platform", "icon": "/assets/img/gitea.webp"},
-    {"name": "Nextcloud", "url": "https://cloud.yanlincs.com", "description": "Cloud storage and office suite", "icon": "/assets/img/nextcloud.webp"},
-    {"name": "immich", "url": "https://photo.yanlincs.com", "description": "Home photo server", "icon": "/assets/img/immich.webp"},
-    {"name": "Docmost", "url": "https://note.yanlincs.com", "description": "Collaborative document editor", "icon": "/assets/img/docmost.webp"},
-    {"name": "Overleaf", "url": "https://latex.yanlincs.com", "description": "Collaborative LaTeX editor", "icon": "/assets/img/overleaf.webp"},
-    {"name": "linkding", "url": "https://link.yanlincs.com", "description": "Bookmark manager", "icon": "/assets/img/linkding.webp"},
-    {"name": "WebDAV", "url": "https://dav.yanlincs.com", "description": "A simple WebDAV server", "icon": "/assets/img/webdav.webp", "icon_dark": "/assets/img/webdav_dark.webp"},
-    {"name": "PairDrop", "url": "https://drop.yanlincs.com", "description": "P2P file sharing service", "icon": "/assets/img/pairdrop.webp"},
-    {"name": "Gotify", "url": "https://notify.yanlincs.com", "description": "Message distribution server", "icon": "/assets/img/gotify.webp"},
-    {"name": "Nginx Proxy Manager", "url": "https://proxy.yanlincs.com", "description": "Proxy server", "icon": "/assets/img/nginx.webp"}
+    {"export": True, "name": "Plex", "url": "https://plex.yanlincs.com", "description": "Media streaming server", "icon": "/assets/img/plex.webp", "icon_dark": "/assets/img/plex_dark.webp"},
+    {"export": True, "name": "Emby", "url": "https://emby.yanlincs.com", "description": "Media streaming server", "icon": "/assets/img/emby.webp", "icon_dark": "/assets/img/emby_dark.webp"},
+    {"export": True, "name": "Overseerr", "url": "https://seerr.yanlincs.com", "description": "Media request manager", "icon": "/assets/img/overseerr.webp", "icon_dark": "/assets/img/overseerr_dark.webp"},
+    {"export": True, "name": "Tautulli", "url": "https://tautu.yanlincs.com", "description": "Media server monitoring", "icon": "/assets/img/tautulli.webp", "icon_dark": "/assets/img/tautulli_dark.webp"},
+    {"export": True, "name": "Gitea", "url": "https://git.yanlincs.com", "description": "Git and development platform", "icon": "/assets/img/gitea.webp"},
+    {"export": True, "name": "Nextcloud", "url": "https://cloud.yanlincs.com", "description": "Cloud storage and office suite", "icon": "/assets/img/nextcloud.webp"},
+    {"export": True, "name": "immich", "url": "https://photo.yanlincs.com", "description": "Home photo server", "icon": "/assets/img/immich.webp"},
+    {"export": True, "name": "Docmost", "url": "https://note.yanlincs.com", "description": "Collaborative document editor", "icon": "/assets/img/docmost.webp"},
+    {"export": True, "name": "Overleaf", "url": "https://latex.yanlincs.com", "description": "Collaborative LaTeX editor", "icon": "/assets/img/overleaf.webp"},
+    {"export": True, "name": "linkding", "url": "https://link.yanlincs.com", "description": "Bookmark manager", "icon": "/assets/img/linkding.webp"},
+    {"export": True, "name": "WebDAV", "url": "https://dav.yanlincs.com", "description": "A simple WebDAV server", "icon": "/assets/img/webdav.webp", "icon_dark": "/assets/img/webdav_dark.webp"},
+    {"export": True, "name": "PairDrop", "url": "https://drop.yanlincs.com", "description": "P2P file sharing service", "icon": "/assets/img/pairdrop.webp"},
+    {"export": True, "name": "Gotify", "url": "https://notify.yanlincs.com", "description": "Message distribution server", "icon": "/assets/img/gotify.webp"},
+    {"export": True, "name": "NPM", "url": "https://proxy.yanlincs.com", "description": "Ngnix proxy manager", "icon": "/assets/img/nginx.webp"},
+    # Inner services (not exposed to the public)
+    {"export": False, "name": "Sonarr", "url": "http://so.home.lab:8989", "description": "TV series management", "icon": "/assets/img/sonarr.webp"},
+    {"export": False, "name": "Radarr", "url": "http://ra.home.lab:7878", "description": "Movie management", "icon": "/assets/img/radarr.webp", "icon_dark": "/assets/img/radarr_dark.webp"},
+    {"export": False, "name": "Lidarr", "url": "http://li.home.lab:8686", "description": "Music management", "icon": "/assets/img/lidarr.webp"},
+    {"export": False, "name": "Bazarr", "url": "http://ba.home.lab:6767", "description": "Subtitle management", "icon": "/assets/img/bazarr.webp"},
+    {"export": False, "name": "Pi-hole @ rpi", "url": "http://pi.home.lab/admin", "description": "DNS-based ad blocker", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
+    {"export": False, "name": "Pi-hole @ nas", "url": "http://hole.back.up/admin", "description": "Backup of main Pi-hole", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
+    {"export": False, "name": "Syncthing @ rpi", "url": "http://pi.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
+    {"export": False, "name": "Syncthing @ nas", "url": "http://sync.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
+    {"export": False, "name": "qBittorrent", "url": "http://qb.home.lab:8080", "description": "BitTorrent client", "icon": "/assets/img/qbittorrent.webp"},
+    {"export": False, "name": "Transmission", "url": "http://tr.home.lab:9091", "description": "BitTorrent client", "icon": "/assets/img/transmission.webp"},
+    {"export": False, "name": "Nas", "url": "http://nas.home.lab", "description": "Unraid home server", "icon": "/assets/img/unraid.webp"},
+    {"export": False, "name": "Router", "url": "http://router.home.lab", "description": "OpenWRT home router", "icon": "/assets/img/openwrt.webp", "icon_dark": "/assets/img/openwrt_dark.webp"},
 ]
 for service in services:
     service["status"] = "unknown"
