@@ -1,1 +1,1 @@
-rsync -avP ./ hetzner:~/homelab-dashboard --exclude=".git"
+rsync -avP --delete ./ hetzner:~/homelab-dashboard --exclude=".git"
