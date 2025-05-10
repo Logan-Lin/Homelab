@@ -35,10 +35,10 @@ services = [
     {"export": False, "name": "Radarr", "url": "http://ra.home.lab:7878", "description": "Movie management", "icon": "/assets/img/radarr.webp", "icon_dark": "/assets/img/radarr_dark.webp"},
     {"export": False, "name": "Lidarr", "url": "http://li.home.lab:8686", "description": "Music management", "icon": "/assets/img/lidarr.webp"},
     {"export": False, "name": "Bazarr", "url": "http://ba.home.lab:6767", "description": "Subtitle management", "icon": "/assets/img/bazarr.webp"},
-    {"export": False, "name": "Pi-hole @ rpi", "url": "http://pi.home.lab/admin", "description": "DNS-based ad blocker", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
-    {"export": False, "name": "Pi-hole @ nas", "url": "http://hole.back.up/admin", "description": "Backup of main Pi-hole", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
-    {"export": False, "name": "Syncthing @ rpi", "url": "http://pi.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
-    {"export": False, "name": "Syncthing @ nas", "url": "http://sync.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
+    {"export": False, "name": "Pi-hole", "url": "http://pi.home.lab/admin", "description": "DNS-based ad blocker", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
+    {"export": False, "display": False,"name": "Pi-hole @ nas", "url": "http://hole.back.up/admin", "description": "Backup of main Pi-hole", "icon": "/assets/img/pihole.webp", "icon_dark": "/assets/img/pihole_dark.webp"},
+    {"export": False, "name": "Syncthing", "url": "http://pi.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
+    {"export": False, "display": False, "name": "Syncthing @ nas", "url": "http://sync.home.lab:8384", "description": "P2P file sync", "icon": "/assets/img/syncthing.webp"},
     {"export": False, "name": "qBittorrent", "url": "http://qb.home.lab:8080", "description": "BitTorrent client", "icon": "/assets/img/qbittorrent.webp"},
     {"export": False, "name": "Transmission", "url": "http://tr.home.lab:9091", "description": "BitTorrent client", "icon": "/assets/img/transmission.webp"},
     {"export": False, "name": "Nas", "url": "http://nas.home.lab", "description": "Unraid home server", "icon": "/assets/img/unraid.webp"},
@@ -50,6 +50,10 @@ for service in services:
     service["last_checked"] = 0
     service["response_code"] = None
     service["error"] = None
+    service["response_time"] = None
+
+# Response time threshold for slow status (in seconds)
+SLOW_THRESHOLD = float(os.getenv("SLOW_THRESHOLD"))
 
 @app.route('/')
 def index():
@@ -78,16 +82,26 @@ def check_service_health(service):
     
     try:
         # First try a HEAD request which is faster
+        start_time = time.time()
         response = requests.head(service["url"], timeout=5, headers=headers, allow_redirects=True)
         status_code = response.status_code
         
         # If the HEAD request fails or returns non-2xx, try a GET request
         if status_code >= 400:
+            start_time = time.time()
             response = requests.get(service["url"], timeout=5, headers=headers, allow_redirects=True)
             status_code = response.status_code
         
+        # Calculate response time
+        response_time = (time.time() - start_time) * 1000
+        service["response_time"] = int(response_time)
+        
         if status_code < 400 or (status_code in [401, 403]):
-            service["status"] = "up"
+            # Service is reachable, check if it's slow
+            if response_time > SLOW_THRESHOLD:
+                service["status"] = "slow"
+            else:
+                service["status"] = "up"
             service["response_code"] = status_code
         else:
             service["status"] = "down"
@@ -95,10 +109,10 @@ def check_service_health(service):
     except requests.RequestException as e:
         service["status"] = "down"
         service["response_code"] = None
-        service["error"] = str(e)
+        service["response_time"] = None
     
     service["last_checked"] = time.time()
-    logger.info(f"Health check for {service['name']}: {service['status']} (Code: {service.get('response_code')})")
+    logger.info(f"Health check for {service['name']}: {service['status']} (Code: {service.get('response_code')}, Time: {service.get('response_time')}s)")
 
 def health_check_worker():
     while True:
@@ -108,10 +122,10 @@ def health_check_worker():
         for service in services:
             check_service_health(service)
             
-            # Check for state transitions
+            # Check for state transitions - only consider actual down states, not slow
             if service["status"] == "down" and service["previous_status"] != "down":
                 newly_down_services.append(service)
-            elif service["status"] == "up" and service["previous_status"] == "down":
+            elif service["status"] != "down" and service["previous_status"] == "down":
                 recovered_services.append(service)
 
         # Notify about newly down services

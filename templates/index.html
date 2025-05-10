@@ -90,6 +90,7 @@
             --status-up: #28a745;
             --status-down: #dc3545;
             --status-unknown: #6c757d;
+            --status-slow: #fdaf14;
             --text-secondary: #6c757d;
         }
 
@@ -104,7 +105,6 @@
 
         body {
             background-color: var(--background-color);
-            /* padding-top: 20px; */
             color: var(--text-color);
             min-height: 100vh;
             display: flex;
@@ -177,6 +177,10 @@
         
         .status-unknown {
             background-color: var(--status-unknown);
+        }
+
+        .status-slow {
+            background-color: var(--status-slow);
         }
         
         .status-tooltip {
@@ -258,16 +262,17 @@
             let hasInnerServices = false;
             
             healthData.forEach(service => {
+                if (service.display === false) {
+                    return;
+                }
+                
                 const statusClass = `status-${service.status}`;
                 const lastChecked = new Date(service.last_checked * 1000).toLocaleTimeString();
                 const iconSrc = isDarkMode && service.icon_dark ? service.icon_dark : service.icon;
                 
                 let statusDetails = `Status: ${service.status}`;
-                if (service.response_code) {
-                    statusDetails += ` (${service.response_code})`;
-                }
-                if (service.status === 'down' && service.error) {
-                    statusDetails += ` - ${service.error}`;
+                if (service.response_time) {
+                    statusDetails += ` (${service.response_time}ms)`;
                 }
                 
                 const isInnerService = service.export === false;
