@@ -102,7 +102,7 @@
 
         body {
             background-color: var(--background-color);
-            padding-top: 20px;
+            /* padding-top: 20px; */
             color: var(--text-color);
             min-height: 100vh;
             display: flex;
@@ -134,7 +134,7 @@
         .card-img-top {
             height: 120px;
             object-fit: contain;
-            padding: 30px;
+            padding: 25px;
             background-color: var(--icon-bg-color);
         }
         .header {
@@ -193,24 +193,24 @@
 </head>
 <body>
     <div class="container main-content">
-        <div class="header">
+        <div class="header pt-3">
             <div class="row flex-nowrap justify-content-between align-items-center">
                 <div class="col-2">
                     <a class="link-secondary px-2 h4" href="mailto:s@yanlincs.com"><i class="bi bi-envelope-fill"></i></a>
                 </div>
                 <div class="col-8 text-center">
-                    <h2 style="font-family: 'Abril Fatface', sans-serif;">Yan Lin's Homelab</h2>
+                    <h2 class="fw-bold m-0" style="font-family: 'Abril Fatface', sans-serif;">Yan Lin's Homelab</h2>
                 </div>
                 <div class="col-2 text-end">
                     <a class="link-secondary px-2 h4" href="https://www.yanlincs.com"><i class="bi bi-house-fill"></i></a>
                 </div>
             </div>
-            <p class="lead text-center" style="font-family: 'Georgia', sans-serif;">
+            <p class="lead text-center mt-2" style="font-family: 'Georgia', sans-serif;">
                 Services running on my home server, publicly accessible through reverse proxy
             </p>
         </div>
         
-        <div id="services-container" class="row g-4"></div>
+        <div id="services-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-3"></div>
     </div>
 
     <footer>
@@ -246,7 +246,7 @@
                 }
                 
                 const card = `
-                    <div class="col-xxl-3 col-lg-4 col-sm-6">
+                    <div class="col">
                         <a href="${service.url}" class="text-decoration-none" target="_blank">
                             <div class="card">
                                 <div class="status-indicator ${statusClass}"></div>
@@ -254,7 +254,7 @@
                                 <img src="${iconSrc}" class="card-img-top" alt="${service.name} icon">
                                 <div class="card-body p-3 pb-0">
                                     <h5 class="card-title">${service.name}</h5>
-                                    <p class="card-text">${service.description}</p>
+                                    <p class="card-text"><small>${service.description}</small></p>
                                 </div>
                             </div>
                         </a>
