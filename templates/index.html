@@ -229,10 +229,12 @@
         function createServiceCards(healthData) {
             const servicesContainer = $('#services-container');
             servicesContainer.empty();
+            const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
             
             healthData.forEach(service => {
                 const statusClass = `status-${service.status}`;
                 const lastChecked = new Date(service.last_checked * 1000).toLocaleTimeString();
+                const iconSrc = isDarkMode && service.icon_dark ? service.icon_dark : service.icon;
                 
                 // Create detailed status message
                 let statusDetails = `Status: ${service.status}`;
@@ -249,7 +251,7 @@
                             <div class="card">
                                 <div class="status-indicator ${statusClass}"></div>
                                 <div class="status-tooltip">${statusDetails}<br>Last checked: ${lastChecked}</div>
-                                <img src="${service.icon}" class="card-img-top" alt="${service.name} icon">
+                                <img src="${iconSrc}" class="card-img-top" alt="${service.name} icon">
                                 <div class="card-body p-3 pb-0">
                                     <h5 class="card-title">${service.name}</h5>
                                     <p class="card-text">${service.description}</p>
@@ -289,6 +291,7 @@
             const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const theme = darkModeMediaQuery.matches ? 'dark' : 'light';
             document.documentElement.setAttribute('data-bs-theme', theme);
+            fetchHealthStatus();
         }
 
         $(document).ready(function() {
